@@ -1,0 +1,44 @@
+--- /sbin/dhclient-script	2009-01-16 01:08:53.000000000 +0200
++++ dhclient-script	2009-01-15 18:49:12.000000000 +0200
+@@ -14,7 +14,7 @@
+ 
+ make_resolv_conf() {
+     if [ -n "$new_domain_name" -o -n "$new_domain_name_servers" ]; then
+-        local new_resolv_conf=/etc/resolv.conf.dhclient-new
++        local new_resolv_conf=/etc/manager/resolv/resolv.conf-$interface
+         rm -f $new_resolv_conf
+         if [ -n "$new_domain_name" ]; then
+             echo search $new_domain_name >>$new_resolv_conf
+@@ -28,7 +28,7 @@
+         fi
+         chown --reference=/etc/resolv.conf $new_resolv_conf
+         chmod --reference=/etc/resolv.conf $new_resolv_conf
+-        mv -f $new_resolv_conf /etc/resolv.conf
++        # mv -f $new_resolv_conf /etc/resolv.conf
+     fi
+ }
+ 
+@@ -161,8 +161,10 @@
+             ifconfig $interface inet $new_ip_address $new_subnet_arg \
+                 $new_broadcast_arg $mtu_arg
+ 
++	    echo -n > /etc/manager/routes/$interface
+             for router in $new_routers; do
+-                route add default dev $interface gw $router $metric_arg
++	    	echo $router $metric_arg > /etc/manager/routes/$interface
++                #route add default dev $interface gw $router $metric_arg
+             done
+         fi
+ 
+@@ -220,8 +222,10 @@
+ 	    	done
+ 	    fi
+ 
++	    echo -n > /etc/manager/routes/$interface
+             for router in $new_routers; do
+-                route add default dev $interface gw $router $metric_arg
++	    	echo $router $metric_arg > /etc/manager/routes/$interface
++                #route add default dev $interface gw $router $metric_arg
+             done
+ 
+             make_resolv_conf

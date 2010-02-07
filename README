@@ -1,0 +1,17 @@
+Author: Joonas Kortesalmi <joneskoo ! derbian.fi>
+Licence: Buy me a lunch
+
+If you use this in any commercial manner, please buy me a lunch.
+
+Description
+-----------
+Joonas likes redundancy. So Joonas, being frustrated with having even minute
+long downtimes on his home DSL connection after the dog had tripped on some
+cables, wrote a script to provide redundant connectivity. Here it is.
+
+At Joonas' setup, it monitors three connections (2x DSL, 1x 3G) and chooses
+the best one. When the better connection resumes after the break, it's
+switched back but only after 10 successful ping runs.
+
+It's a hack, not beautiful at all. It works. Let me know if you use it.
+
