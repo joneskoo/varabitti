@@ -10,7 +10,7 @@ else
 fi
 
 for host in $hosts; do
-	if ping -I $interface -q -c2 -W 1 -i 0.2 $host >/dev/null 2>/dev/null
+	if ping -I $interface -q -c3 -W 2 -i 0.2 $host >/dev/null 2>/dev/null
 	then
 		exit 0
 	fi
