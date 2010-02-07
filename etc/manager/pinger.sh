@@ -16,5 +16,4 @@ for host in $hosts; do
 	fi
 done
 
-echo $interface fail
 exit 1

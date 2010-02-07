@@ -5,9 +5,12 @@ import sys
 import os
 from time import sleep
 from datetime import datetime
+import logging
 
-preflist = ['vlan20', 'vlan51', 'ppp0']
-ifstatus = {'vlan20' : 0, 'vlan51' : 0, 'ppp0' : 0}
+NAME = 'varabitti'
+DELAY = 5
+preflist = ['eth1', 'ppp100']
+ifstatus = {}
 curif = ''
 
 
@@ -30,18 +33,35 @@ def isbetter(better, current):
     else:
         return False
     
+# create logger
+logger = logging.getLogger(NAME)
+logger.setLevel(logging.DEBUG)
+# create console handler and set level to debug
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter("%(asctime)s %(name)s[%(levelname)s]: %(message)s")
+# add formatter to ch
+ch.setFormatter(formatter)
+# add ch to logger
+logger.addHandler(ch)
 
+logger.info("Started")
+for iface in preflist:
+    ifstatus[iface] = 0
 
 while True:
     betterfound = ''
     # Ping for each interface
     for iface in preflist:
         if ping(iface):
+            logger.debug("Interface %s is UP for %d seconds" % (iface, ifstatus[iface]*DELAY))
             ifstatus[iface] += 1
             if isbetter(iface, curif) and isbetter(iface, betterfound):
                 betterfound = iface
         else:
             ifstatus[iface] = 0
+            logger.debug("Interface %s is DOWN" % (iface))
     # If current interface went down, use best remaining up
     if curif != '' and ifstatus[curif] == 0:
         for iface in preflist:
@@ -53,9 +73,10 @@ while True:
     if betterfound != '' and curif != betterfound:
         if os.system("/etc/manager/switch.sh " + betterfound) == 0:
             curif = betterfound
-            print str(datetime.now()) + ": Switched to", betterfound, ifstatus[betterfound]
+            logger.info("Switched to %s %s" % (betterfound, ifstatus[betterfound]))
         else:
-            print "Failed to switch interface"
+            logger.critical("Failed to switch interface %s" % (betterfound))
+            logger.critical("Exiting...")
             sys.exit(1)
-    sleep(15)
+    sleep(5)
 

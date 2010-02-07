@@ -1,0 +1,11 @@
+#!/bin/bash
+
+IFACE=$1
+TTY=$2
+SPEED=$3
+LOCALIP=$4
+REMOTEIP=$5
+IPPARAM=$6
+
+echo $REMOTEIP > "/etc/manager/routes/${IFACE}"
+cp -f /etc/ppp/resolv.conf "/etc/manager/resolv/resolv.conf-${IFACE}"
