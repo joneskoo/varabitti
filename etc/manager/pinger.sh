@@ -1,6 +1,6 @@
 #!/bin/bash
 
-hosts="128.214.248.132 66.249.91.104"
+hosts="217.30.184.161 81.90.72.5 8.8.8.8"
 
 if [ -z "$1" ]; then
 	echo "Usage: $0 interface"
