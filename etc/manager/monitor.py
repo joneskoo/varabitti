@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 
 NAME = 'varabitti'
-preflist = ['eth1', 'ppp100']
+preflist = ['eth1', 'hso0', 'ppp100', 'ppp200']
 DELAY = 10
 LOGFILE = '/tmp/varabitti.log'
 STATEFILE = '/tmp/varabitti.state'
