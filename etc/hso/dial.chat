@@ -1,0 +1,8 @@
+ABORT 	ERROR
+TIMEOUT	10
+""	ATZ
+OK  "AT+CGDCONT=1,,\"$APN\"^m"
+OK	"AT_OWANCALL=1,1,1^m"
+OK	"\d\d\d\d\d\d\d\dAT_OWANDATA=1^m"
+OK	""
+
