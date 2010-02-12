@@ -1,0 +1,15 @@
+#!/bin/bash
+
+IFACE=$1
+TTY=$2
+SPEED=$3
+LOCALIP=$4
+REMOTEIP=$5
+IPPARAM=$6
+
+UNIT=$(echo $IFACE|cut -c 4-)
+TABLE=$[6000+$UNIT]
+
+ip route del default dev $IFACE table $TABLE
+ip rule del from $LOCALIP table $TABLE
+

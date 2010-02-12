@@ -7,5 +7,11 @@ LOCALIP=$4
 REMOTEIP=$5
 IPPARAM=$6
 
+UNIT=$(echo $IFACE|cut -c 4-)
+TABLE=$[6000+$UNIT]
+
 echo $REMOTEIP > "/etc/manager/routes/${IFACE}"
 cp -f /etc/ppp/resolv.conf "/etc/manager/resolv/resolv.conf-${IFACE}"
+ip rule add from $LOCALIP table $TABLE
+ip route add default dev $IFACE table $TABLE
+
