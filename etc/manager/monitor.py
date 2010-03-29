@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # coding: UTF-8
+#
+# Copyright Joonas Kortesalmi 2009-2010
+# All rights reserved.
 
 import sys
 import os
