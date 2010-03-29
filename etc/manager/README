@@ -1,0 +1,62 @@
+Varabitti
+=========
+
+Copyright Joonas Kortesalmi 2009-2010.
+All rights reserved.
+
+Our solution is to use ip rule to have multiple default routes.
+Monitor.py uses ping to monitor each of the connections simultaneously
+and switches the active default route. All default routes are, however,
+configured all the time. We use netfilter to keep the connections marked
+so they end up in the correct interface.
+
+# ip rule add priority 5000 table main 
+# ip rule add priority 5001 fwmark 1 table option 
+# ip rule add priority 5002 fwmark 2 table huawei 
+# ip rule add priority 5003 fwmark 3 table gprs 
+
+We also use ppp ip-up.d and ip-down.d scripts to generate some rules dynamically:
+
+# ip rule add from $LOCALIP table $TABLE
+# ip route add default dev $IFACE table $TABLE
+
+For full code see etc/ppp/ip-up.d/varabitti and etc/ppp/ip-down.d/varabitti.
+
+This is how it looks like in action:
+  joneskoo@hansu:~$ ip rule
+  0:  from all lookup local 
+  5000:   from all lookup main 
+  5001:   from all fwmark 0x1 lookup option 
+  5002:   from all fwmark 0x2 lookup huawei 
+  5003:   from all fwmark 0x3 lookup gprs 
+  6100:   from 85.76.67.xxx lookup huawei 
+  6200:   from 85.76.207.xxx lookup gprs 
+  7000:   from 85.76.102.xxx lookup option 
+  32766:  from all lookup main 
+  32767:  from all lookup default 
+
+Table names can be configured in /etc/iproute/rt_tables like this:
+  6200 gprs
+  6100 huawei
+  5000 option
+
+The modified dhclient-script for use with DHCP is also provided at
+etc/dhcp3/dhclient-script.
+
+switch.sh changes the default route for the local host and changes the
+varabitti mangle table so new connections are marked with the new preferred
+route mark.
+
+For help with setting up netfilter marking to implement similar default
+route preferences, here's some lines I used:
+
+  iptables -t mangle -A PREROUTING -j CONNMARK --restore-mark
+  iptables -t mangle -A PREROUTING -m mark ! --mark 0x0 -j ACCEPT 
+  iptables -t mangle -A PREROUTING -d 172.20.100.0/24 -j ACCEPT 
+  iptables -t mangle -A PREROUTING -d 192.168.69.0/24 -j ACCEPT 
+  iptables -t mangle -A PREROUTING -j varabitti 
+  iptables -t mangle -A PREROUTING -j CONNMARK --save-mark
+  iptables -t mangle -N varabitti
+  iptables -t mangle -A varabitti -j MARK --set-mark 1
+
+
