@@ -20,9 +20,21 @@ function checkfiles () {
 
 
 function useinterface () {
-	route del default > /dev/null 2>/dev/null
-	route add default dev $interface gw $(cat "$PREF/routes/$interface")
-	cp -af "$PREF/resolv/resolv.conf-$interface" /etc/resolv.conf
+	ip route del table default default > /dev/null 2>/dev/null
+	ip route add table default default dev $interface via $(cat "$PREF/routes/$interface")
+	#cp -af "$PREF/resolv/resolv.conf-$interface" /etc/resolv.conf
+
+    iptables -t mangle -F varabitti
+    if [ $interface == "hso0" ]; then
+        iptables -t mangle -A varabitti -j MARK --set-mark 1
+    elif [ $interface == "ppp100" ]; then
+        iptables -t mangle -A varabitti -j MARK --set-mark 2
+    elif [ $interface == "ppp200" ]; then
+        iptables -t mangle -A varabitti -j MARK --set-mark 3
+    fi
+
+    sleep 5
+    /etc/manager/dyndns.py
 }
 
 checkfiles
