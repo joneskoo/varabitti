@@ -9,15 +9,8 @@ else
 	interface=$1
 fi
 
-#if [ $interface == "hso0" ]; then
-#    exit 1
-#fi
-
-for host in $hosts; do
-	if ping -I $interface -q -c2 -W 4 -i 0.5 $host >/dev/null 2>/dev/null
-	then
-		exit 0
-	fi
-done
+if [ "`fping -a -I $interface $hosts`" != "" ]; then
+    exit 0
+fi
 
 exit 1
