@@ -10,6 +10,7 @@ from time import sleep, time
 from datetime import datetime
 import ConfigParser, os
 import pickle
+import simplejson
 import logging
 import signal
 
@@ -45,7 +46,7 @@ class Monitor:
         for iface in self.config['preflist']:
             if self.interface_uptime(iface):
                 return iface
-        return False
+        return self.cur_if
 
     def interface_is_better(self, new, previous=None):
         ''' If iface is better than current interface and has worked for at least
@@ -75,6 +76,14 @@ class Monitor:
     def write_state(self):
         pickle.dump(self, open(self.config['statefile'], 'w'))
 
+    def write_status(self):
+        ifuptime = {}
+        for iface in config['preflist']:
+            ifuptime[iface] = self.interface_uptime(iface)
+        data = {'if_uptime' : ifuptime, 'cur_if': self.cur_if}
+        simplejson.dump(data, open(self.config['statusfile'], 'w'),
+                        skipkeys=True, indent=4)
+
 def read_config():
     c = {}
     config = ConfigParser.ConfigParser()
@@ -84,6 +93,8 @@ def read_config():
     c['threshold'] = config.getint('monitor', 'threshold')
     c['logfile'] = config.get('monitor', 'logfile')
     c['statefile'] = config.get('monitor', 'statefile')
+    c['statusfile'] = config.get('monitor', 'statusfile')
+    c['pidfile'] = config.get('monitor', 'pidfile')
     c['debug'] = config.getboolean('monitor', 'debug')
     return c
 
@@ -143,6 +154,7 @@ def main(config):
             else:
                 logger.info("Waiting for %s to stabilize" % best_if)
         m.write_state()
+        m.write_status()
         sleep_time = m.config['interval'] - (time()-start)
         if sleep_time > 0:
             sleep(sleep_time)
@@ -150,17 +162,50 @@ def main(config):
 def restart_program(signum, frame):
     python = sys.executable
     logger.info("Restarting on SIG %s" % signum)
+    os.unlink(config['pidfile'])
     os.execl(python, python, *sys.argv)
+
+def stop_program(signum, frame):
+    os.unlink(config['pidfile'])
+    sys.exit(0)
 
 if __name__ == "__main__":
     config = read_config()
+    try:
+        pid = int(open(config['pidfile']).read().strip())
+    except:
+        pid = None
+    sig = None
+    if len(sys.argv) > 1:
+        if sys.argv[1].lower() == 'stop':
+            sig = signal.SIGTERM
+        elif sys.argv[1].lower() == 'reload':
+            sig = signal.SIGHUP
+        else:
+            print sys.argv[1].lower()
+            print "Usage: %s <stop|reload>" % sys.argv[0]
+            sys.exit(1)
+    if pid:
+        if sig:
+            os.kill(pid, sig)
+            sys.exit(0)
+        else:
+            try:
+                os.kill(pid, 0)
+                print "Already running, not starting."
+                sys.exit(1)
+            except OSError:
+                pass
+
     logger = setup_logging(config)
     if not config['debug']:
         child_pid = os.fork()
         if child_pid == 0:
             logger.debug("Child Process: PID# %s" % os.getpid())
+            open(config['pidfile'], 'w').write("%s\n" % os.getpid())
         else:
             logger.debug("Parent Process: PID# %s" % os.getpid())
             sys.exit(0)
     signal.signal(signal.SIGHUP, restart_program)
+    signal.signal(signal.SIGTERM, stop_program)
     main(config)
