@@ -33,9 +33,10 @@ function useinterface () {
         iptables -t mangle -A varabitti -j MARK --set-mark 3
     fi
 
-    sleep 5
+    pkill -USR1 openvpn
     /etc/manager/dyndns.py
 }
 
 checkfiles
 useinterface
+exit 0
